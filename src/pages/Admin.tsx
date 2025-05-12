@@ -5,13 +5,15 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Order } from "@/lib/supabase";
+import { Order, OrderItem } from "@/lib/supabase";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const AdminPage = () => {
   const { secretKey } = useParams();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
 
   useEffect(() => {
     // Verify the secret key matches our expected value
@@ -36,7 +38,13 @@ const AdminPage = () => {
         throw error;
       }
 
-      setOrders(data || []);
+      // Transform the data to match our Order type
+      const transformedOrders: Order[] = data.map(order => ({
+        ...order,
+        items: order.items as unknown as OrderItem[]
+      }));
+
+      setOrders(transformedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
@@ -86,6 +94,18 @@ const AdminPage = () => {
     );
   };
 
+  const toggleOrderExpand = (orderId: number) => {
+    setExpandedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const isOrderExpanded = (orderId: number) => {
+    return expandedOrders.includes(orderId);
+  };
+
   return (
     <div className="container py-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -102,6 +122,7 @@ const AdminPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead></TableHead>
                 <TableHead>Order ID</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Email</TableHead>
@@ -113,44 +134,92 @@ const AdminPage = () => {
             </TableHeader>
             <TableBody>
               {orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">#{order.id}</TableCell>
-                  <TableCell>{order.name}</TableCell>
-                  <TableCell>{order.email}</TableCell>
-                  <TableCell>{order.created_at ? formatDate(order.created_at) : "N/A"}</TableCell>
-                  <TableCell>${order.total.toFixed(2)}</TableCell>
-                  <TableCell>{renderOrderStatus(order)}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateOrderStatus(order.id!, "processing")}
-                        disabled={order.status === "processing"}
+                <React.Fragment key={order.id}>
+                  <TableRow className="cursor-pointer hover:bg-gray-50">
+                    <TableCell>
+                      <Button 
+                        onClick={() => toggleOrderExpand(order.id!)} 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8"
                       >
-                        Process
+                        {isOrderExpanded(order.id!) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateOrderStatus(order.id!, "completed")}
-                        disabled={order.status === "completed"}
-                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                      >
-                        Complete
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateOrderStatus(order.id!, "cancelled")}
-                        disabled={order.status === "cancelled"}
-                        className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell>{order.name}</TableCell>
+                    <TableCell>{order.email}</TableCell>
+                    <TableCell>{order.created_at ? formatDate(order.created_at) : "N/A"}</TableCell>
+                    <TableCell>${order.total.toFixed(2)}</TableCell>
+                    <TableCell>{renderOrderStatus(order)}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateOrderStatus(order.id!, "processing")}
+                          disabled={order.status === "processing"}
+                        >
+                          Process
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateOrderStatus(order.id!, "completed")}
+                          disabled={order.status === "completed"}
+                          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                        >
+                          Complete
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateOrderStatus(order.id!, "cancelled")}
+                          disabled={order.status === "cancelled"}
+                          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {isOrderExpanded(order.id!) && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="p-0">
+                        <div className="bg-gray-50 p-4 border-t border-gray-200">
+                          <h3 className="font-semibold mb-2">Order Items</h3>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Product</TableHead>
+                                  <TableHead>Price</TableHead>
+                                  <TableHead>Quantity</TableHead>
+                                  <TableHead>Subtotal</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {(order.items as OrderItem[]).map((item, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{item.product_name}</TableCell>
+                                    <TableCell>${item.price.toFixed(2)}</TableCell>
+                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell>${item.subtotal.toFixed(2)}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                          <div className="mt-4">
+                            <h3 className="font-semibold mb-2">Shipping Information</h3>
+                            <p><span className="font-medium">Address:</span> {order.address}</p>
+                            <p><span className="font-medium">Phone:</span> {order.phone}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>

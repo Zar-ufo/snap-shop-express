@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export type Product = {
   id: number;
@@ -9,13 +10,21 @@ export type Product = {
   image_url: string;
 };
 
+export type OrderItem = {
+  product_id: number;
+  product_name: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+};
+
 export type Order = {
   id?: number;
   name: string;
   email: string;
   phone: string;
   address: string;
-  items: CartItem[];
+  items: OrderItem[] | CartItem[];
   total: number;
   created_at?: string;
   status?: string;
@@ -81,13 +90,20 @@ export async function getProducts(): Promise<Product[]> {
 export async function createOrder(order: Order): Promise<{ success: boolean; error?: string }> {
   try {
     // Convert the cart items to a format suitable for JSON storage
-    const orderItems = order.items.map(item => ({
-      product_id: item.product.id,
-      product_name: item.product.name,
-      price: item.product.price,
-      quantity: item.quantity,
-      subtotal: item.product.price * item.quantity
-    }));
+    const orderItems = order.items.map(item => {
+      if ('product' in item) {
+        // It's a CartItem
+        return {
+          product_id: item.product.id,
+          product_name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          subtotal: item.product.price * item.quantity
+        };
+      }
+      // It's already an OrderItem
+      return item;
+    });
 
     const { error } = await supabase
       .from('orders')
