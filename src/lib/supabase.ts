@@ -1,5 +1,4 @@
-
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Product = {
   id: number;
@@ -24,13 +23,6 @@ export type CartItem = {
   product: Product;
   quantity: number;
 };
-
-// In a real implementation, this would use environment variables
-// but since we need to connect this to Supabase first, this is just a placeholder
-const supabaseUrl = "YOUR_SUPABASE_URL";
-const supabaseKey = "YOUR_SUPABASE_KEY";
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Sample products data until we connect to Supabase
 export const sampleProducts: Product[] = [
