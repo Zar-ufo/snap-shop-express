@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Checkout from "./pages/Checkout";
 import Confirmation from "./pages/Confirmation";
+import AdminPage from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/products" element={<Products />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/confirmation" element={<Confirmation />} />
+            <Route path="/admin/:secretKey" element={<AdminPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export type Product = {
@@ -17,6 +18,7 @@ export type Order = {
   items: CartItem[];
   total: number;
   created_at?: string;
+  status?: string;
 };
 
 export type CartItem = {
@@ -77,8 +79,39 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function createOrder(order: Order): Promise<{ success: boolean; error?: string }> {
-  // Once connected to Supabase, this would save to the database
-  // For now, just simulate success
-  console.log("Order submitted:", order);
-  return { success: true };
+  try {
+    // Convert the cart items to a format suitable for JSON storage
+    const orderItems = order.items.map(item => ({
+      product_id: item.product.id,
+      product_name: item.product.name,
+      price: item.product.price,
+      quantity: item.quantity,
+      subtotal: item.product.price * item.quantity
+    }));
+
+    const { error } = await supabase
+      .from('orders')
+      .insert({
+        name: order.name,
+        email: order.email,
+        phone: order.phone,
+        address: order.address,
+        items: orderItems,
+        total: order.total,
+        status: 'pending'
+      });
+
+    if (error) {
+      console.error('Error inserting order:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
 }
