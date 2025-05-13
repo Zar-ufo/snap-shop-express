@@ -23,10 +23,14 @@ export function ProductCard({ product }: ProductCardProps) {
     navigate("/checkout");
   };
 
+  const handleViewDetails = () => {
+    navigate(`/product/${product.id}`);
+  };
+
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardContent className="p-0">
-        <div className="overflow-hidden">
+        <div className="overflow-hidden cursor-pointer" onClick={handleViewDetails}>
           <img
             src={product.image_url}
             alt={product.name}
@@ -34,7 +38,12 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         </div>
         <div className="p-4">
-          <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
+          <h3 
+            className="font-semibold text-lg line-clamp-1 cursor-pointer hover:text-brand-teal transition-colors"
+            onClick={handleViewDetails}
+          >
+            {product.name}
+          </h3>
           <p className="text-brand-dark/70 line-clamp-2 text-sm h-10">{product.description}</p>
           <p className="font-bold text-brand-teal mt-2">${product.price.toFixed(2)}</p>
         </div>
