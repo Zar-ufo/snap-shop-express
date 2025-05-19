@@ -20,6 +20,9 @@ export default {
 		},
 		extend: {
 			colors: {
+		        'brand-blue': '#0077CC',    // From logo
+        		'brand-orange': '#FF6600',  // From logo
+        		'brand-purple': '#6A1B9A',   // Optional, from lower part of the shirt
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -95,13 +98,22 @@ export default {
 				'slide-in': {
 					'0%': { transform: 'translateX(100%)' },
 					'100%': { transform: 'translateX(0)' },
-				}
+				},
+				fadeIn: {
+					'from': { opacity: 0 },
+					'to': { opacity: 1 },
+				},
+				bounce: {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.1)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
 				'slide-in': 'slide-in 0.3s ease-out',
-			}
+				'fadeIn': 'fadeIn 0.5s ease-in',
+				'bounce': 'bounce 1s infinite',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

@@ -61,7 +61,7 @@ const Index = () => {
       
       <footer className="bg-brand-dark text-white py-8">
         <div className="container text-center">
-          <p>© 2025 SnapShop. All rights reserved.</p>
+          <p>© 2025 ClothingWear BD. All rights reserved.</p>
         </div>
       </footer>
     </div>
